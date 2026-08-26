@@ -16,7 +16,7 @@ def fp(addr: Int) -> F64Ptr:
 
 
 def hash_slot(lo: Int64, hi: Int64, mask: Int) -> Int:
-    return Int((lo * 73856093 ^ hi * 19349663) & Int64(mask))
+    return Int((lo * 1000003 ^ hi * 9176) & Int64(mask))
 
 
 def fill_minus_one(pointer: I64Ptr, count: Int):
@@ -79,8 +79,8 @@ def mom_build_topology(
             return -1
 
         for local in range(3):
-            var a = Int(faces[3 * f + local])
-            var b = Int(faces[3 * f + ((local + 1) % 3)])
+            var a = v0 if local == 0 else (v1 if local == 1 else v2)
+            var b = v1 if local == 0 else (v2 if local == 1 else v0)
             var lo = Int64(min(a, b))
             var hi = Int64(max(a, b))
             var key = lo * Int64(nv) + hi
@@ -286,27 +286,20 @@ def mom_face_normals(
 
 @export("mom_flip_edge")
 def mom_flip_edge(
-    faces_addr: Int,
-    he_from_addr: Int,
-    he_to_addr: Int,
-    he_next_addr: Int,
-    he_prev_addr: Int,
-    he_opposite_addr: Int,
-    he_face_addr: Int,
-    face_halfedges_addr: Int,
-    vertex_out_addr: Int,
+    buffers_addr: Int,
     edge_count: Int,
     edge: Int,
 ) abi("C") -> Int:
-    var faces = ip(faces_addr)
-    var he_from = ip(he_from_addr)
-    var he_to = ip(he_to_addr)
-    var he_next = ip(he_next_addr)
-    var he_prev = ip(he_prev_addr)
-    var he_opposite = ip(he_opposite_addr)
-    var he_face = ip(he_face_addr)
-    var face_halfedges = ip(face_halfedges_addr)
-    var vertex_out = ip(vertex_out_addr)
+    var buffers = ip(buffers_addr)
+    var faces = ip(Int(buffers[0]))
+    var he_from = ip(Int(buffers[1]))
+    var he_to = ip(Int(buffers[2]))
+    var he_next = ip(Int(buffers[3]))
+    var he_prev = ip(Int(buffers[4]))
+    var he_opposite = ip(Int(buffers[5]))
+    var he_face = ip(Int(buffers[6]))
+    var face_halfedges = ip(Int(buffers[7]))
+    var vertex_out = ip(Int(buffers[8]))
     if edge < 0 or edge >= edge_count:
         return 0
     var h = 2 * edge

@@ -230,6 +230,15 @@ def test_topology_simd_tail_handles_isolated_vertices(om):
     assert np.all(rings[3:] == -1)
 
 
+def test_topology_hash_handles_disconnected_faces(om):
+    count = 12
+    points = np.zeros((3 * count, 3), dtype=np.float64)
+    faces = np.arange(3 * count, dtype=np.int64).reshape(count, 3)
+    mesh = make(om, points, faces)
+    assert mesh.n_edges() == 3 * count
+    np.testing.assert_array_equal(mesh.face_vertex_indices(), faces.astype(np.int32))
+
+
 def test_large_topology_matches_upstream(om, upstream):
     points, faces = grid(128)
     ours, theirs = make(om, points, faces), make(upstream, points, faces)

@@ -20,7 +20,7 @@ _SIGNATURES = {
     "mom_padded_rows": ([I] * 5, None),
     "mom_edge_lengths": ([I] * 5, None),
     "mom_face_normals": ([I] * 4, None),
-    "mom_flip_edge": ([I] * 11, I),
+    "mom_flip_edge": ([I] * 3, I),
     "mom_split_edge": ([I] * 10, I),
     "mom_collapse_halfedge": ([I] * 6, I),
 }

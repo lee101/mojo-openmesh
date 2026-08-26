@@ -83,19 +83,24 @@ Linux x86-64, Python 3.13.14:
 
 | operation | mojo-openmesh | upstream OpenMesh | upstream / Mojo |
 | --- | ---: | ---: | ---: |
-| build topology (180k faces) | 97.54 ms | 97.62 ms | 1.00x |
-| all vertex one-rings (90.6k) | 950.0 us | 5.09 ms | 5.36x |
-| all edge lengths (270.6k) | 830.9 us | 351.00 ms | 422.42x |
-| all face normals (180k) | 1.68 ms | 5.76 ms | 3.42x |
-| single flip (51.2k-face mesh) | 131.8 us | 28.3 us | 0.21x |
+| build topology (180k faces) | 74.64 ms | 81.24 ms | 1.09x |
+| all vertex one-rings (90.6k) | 864.0 us | 3.78 ms | 4.38x |
+| all edge lengths (270.6k) | 806.0 us | 364.44 ms | 452.17x |
+| all face normals (180k) | 1.61 ms | 5.03 ms | 3.11x |
+| single flip (51.2k-face mesh) | 37.7 us | 14.9 us | 0.40x |
 
 The edge-length result includes Python API overhead: upstream exposes only a
 per-edge call, while this port crosses the FFI once for the whole array. Each
 reported time is the best observed duration from the repetitions in
 `bench/bench.py`; the benchmark validates result parity before printing. A flip
 updates its two faces and six affected halfedges in place, then rebuilds
-one-ring CSR only if a later query needs it. No CPU parallel or GPU path is
-implemented.
+one-ring CSR only if a later query needs it. Topology hash and vertex sentinel
+initialization uses native-width SIMD stores with a scalar tail. Topology
+construction remains serial because each insertion depends on and mutates the
+shared edge hash and connectivity arrays; the independent initialization pass
+is too small to repay thread launch overhead. No GPU path is implemented: edge
+lengths, normals, traversal, and topology construction are all well below the
+roughly 2 flops per byte threshold where device transfer can pay off.
 
 ## How it works
 

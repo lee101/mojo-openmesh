@@ -151,6 +151,9 @@ class TriMesh:
             self._face_he,
             self._vertex_out,
         )
+        self._flip_addresses = i64(tuple(addr(array) for array in self._flip_buffers))
+        self._flip_address = addr(self._flip_addresses)
+        self._flip_kernel = lib().mom_flip_edge
         self._dirty = False
         self._rings_dirty = True
         self._ensure_rings()
@@ -214,7 +217,10 @@ class TriMesh:
         points = np.ascontiguousarray(points, dtype=np.float64)
         if points.ndim != 2 or points.shape[1] != 3:
             raise ValueError("points must have shape (n, 3)")
-        self._points = np.vstack((self._points, points))
+        if len(self._points):
+            self._points = np.vstack((self._points, points))
+        else:
+            self._points = points.copy()
         self._invalidate()
 
     def add_face(self, *args) -> FaceHandle:
@@ -621,11 +627,7 @@ class TriMesh:
     def flip(self, eh: EdgeHandle) -> None:
         self._ensure_topology()
         edge = _idx(eh, EdgeHandle)
-        ok = lib().mom_flip_edge(
-            *(addr(array) for array in self._flip_buffers),
-            self._edge_count,
-            edge,
-        )
+        ok = self._flip_kernel(self._flip_address, self._edge_count, edge)
         if not ok:
             raise ValueError("edge cannot be flipped")
         self._rings_dirty = True
